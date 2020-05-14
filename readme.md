@@ -29,7 +29,7 @@ We're proposing a `MediaBlob` that extends the regular [blob](https://w3c.github
 ```
 [Exposed=(Window,Worker), Serializable]
 interface MediaBlob : Blob {
-    Constructor(Blob blob);
+    constructor(Blob blob);
     readonly attribute long long duration;
 };
 ```
@@ -53,11 +53,11 @@ console.log(mediaBlob.duration) // Outputs 480000 = 8 minutes
 ```
 [Exposed=(Window,Worker), Serializable]
 interface MediaBlobOperation {
-    Constructor(MediaBlob mediaBlob);
+    constructor(MediaBlob mediaBlob);
 
-    Promise<MediaBlobOperation> trim(long startTime, long endTime);
-    Promise<MediaBlobOperation> split(long time);
-    Promise<MediaBlobOperation> concat(<Sequence<MediaBlob>);
+    void trim(long startTime, long endTime);
+    void split(long time);
+    void concat(<Sequence<MediaBlob>);
     Promise<Sequence<MediaBlob>> finalize(optional DOMString mimeType);
 };
 ```
@@ -87,7 +87,6 @@ the remaining content on either end, if any, is removed.
     * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
     * report the exception event 
     * break
-4. Return the instance of MediaBlobOperation
 
 The User Agent will execute the following when *finalize* is called.
 
@@ -96,11 +95,9 @@ The User Agent will execute the following when *finalize* is called.
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
-mbo.trim(240000, 360000).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.finalize().then(function(mediaBlobs) {
-        // mediaBlobs[0] will be the trimmed blob of 2 min duration
-    });
+mbo.trim(240000, 360000);
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs[0] will be the trimmed blob of 2 min duration
 });
 ```
 
@@ -117,7 +114,6 @@ The split method allows the author to split a *blob* into two separate MediaBlob
     * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
     * report the exception event 
     * break
-4. Return the instance of MediaBlobOperation
 
 The User Agent will execute the following when *finalize* is called.
 
@@ -127,11 +123,9 @@ The User Agent will execute the following when *finalize* is called.
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
-mbo.split(2000).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.finalize().then(function(mediaBlobs) {
-        // mediaBlobs will be an array of two MediaBlobs split at 2 seconds 
-    });
+mbo.split(2000);
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs will be an array of two MediaBlobs split at 2 seconds 
 });
 ```
 
@@ -147,7 +141,6 @@ This method allows you to take two *MediaBlob* blobs and concatenate them.
 3. If the mimeType of m1 does not equal the mimeType of m2:
     * create a new ErrorEvent
     * report the exception event
-4. Return the instance of MediaBlobOperation
 
 The User Agent will execute the following when *finalize* is called.
 
@@ -155,11 +148,9 @@ The User Agent will execute the following when *finalize* is called.
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob1));
-mbo.concat(new MediaBlob(blob2)).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.finalize().then(function(mediaBlobs) {
-        // mediaBlobs[0] will be a concatenated MediaBlob of blob1 and blob2 
-    });
+mbo.concat(new MediaBlob(blob2));
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs[0] will be a concatenated MediaBlob of blob1 and blob2 
 });
 ```
 
@@ -190,14 +181,10 @@ mbo.finalize('video/mp4; codecs=h264,aac;').then(function(mediaBlobs) {
 ### Example with multiple operations
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
-mbo.trim(4000, 360000).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.concat(new MediaBlob(blob2)).then(function(response) {
-        // response will be a Promise containing an instance of MediaBlobOperation
-        response.finalize().then(function(mediaBlobs) {
-            // mediaBlobs[0] will be a concatenated MediaBlob of blob1 (which will be trimmed) and blob2 
-        });
-    });
+mbo.trim(4000, 360000);
+mbo.concat(new MediaBlob(blob2));
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs[0] will be a concatenated MediaBlob of blob1 (which will be trimmed) and blob2 
 });
 ```
 
