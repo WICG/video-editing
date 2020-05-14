@@ -29,7 +29,7 @@ We're proposing a `MediaBlob` that extends the regular [blob](https://w3c.github
 ```
 [Exposed=(Window,Worker), Serializable]
 interface MediaBlob : Blob {
-    Constructor(Blob blob);
+    constructor(Blob blob);
     readonly attribute long long duration;
 };
 ```
@@ -53,11 +53,11 @@ console.log(mediaBlob.duration) // Outputs 480000 = 8 minutes
 ```
 [Exposed=(Window,Worker), Serializable]
 interface MediaBlobOperation {
-    Constructor(MediaBlob mediaBlob);
+    constructor(MediaBlob mediaBlob);
 
-    Promise<MediaBlobOperation> trim(long startTime, long endTime);
-    Promise<MediaBlobOperation> split(long time);
-    Promise<MediaBlobOperation> concat(<Sequence<MediaBlob>);
+    void trim(long startTime, long endTime);
+    void split(long time);
+    void concat(<Sequence<MediaBlob>);
     Promise<Sequence<MediaBlob>> finalize(optional DOMString mimeType);
 };
 ```
@@ -87,7 +87,6 @@ the remaining content on either end, if any, is removed.
     * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
     * report the exception event 
     * break
-4. Return the instance of MediaBlobOperation
 
 The User Agent will execute the following when *finalize* is called.
 
@@ -117,7 +116,6 @@ The split method allows the author to split a *blob* into two separate MediaBlob
     * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
     * report the exception event 
     * break
-4. Return the instance of MediaBlobOperation
 
 The User Agent will execute the following when *finalize* is called.
 
@@ -147,7 +145,6 @@ This method allows you to take two *MediaBlob* blobs and concatenate them.
 3. If the mimeType of m1 does not equal the mimeType of m2:
     * create a new ErrorEvent
     * report the exception event
-4. Return the instance of MediaBlobOperation
 
 The User Agent will execute the following when *finalize* is called.
 
