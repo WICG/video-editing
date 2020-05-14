@@ -95,11 +95,9 @@ The User Agent will execute the following when *finalize* is called.
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
-mbo.trim(240000, 360000).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.finalize().then(function(mediaBlobs) {
-        // mediaBlobs[0] will be the trimmed blob of 2 min duration
-    });
+mbo.trim(240000, 360000);
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs[0] will be the trimmed blob of 2 min duration
 });
 ```
 
@@ -125,11 +123,9 @@ The User Agent will execute the following when *finalize* is called.
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
-mbo.split(2000).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.finalize().then(function(mediaBlobs) {
-        // mediaBlobs will be an array of two MediaBlobs split at 2 seconds 
-    });
+mbo.split(2000);
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs will be an array of two MediaBlobs split at 2 seconds 
 });
 ```
 
@@ -152,11 +148,9 @@ The User Agent will execute the following when *finalize* is called.
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob1));
-mbo.concat(new MediaBlob(blob2)).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.finalize().then(function(mediaBlobs) {
-        // mediaBlobs[0] will be a concatenated MediaBlob of blob1 and blob2 
-    });
+mbo.concat(new MediaBlob(blob2));
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs[0] will be a concatenated MediaBlob of blob1 and blob2 
 });
 ```
 
@@ -187,14 +181,10 @@ mbo.finalize('video/mp4; codecs=h264,aac;').then(function(mediaBlobs) {
 ### Example with multiple operations
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
-mbo.trim(4000, 360000).then(function(response) {
-    // response will be a Promise containing an instance of MediaBlobOperation
-    response.concat(new MediaBlob(blob2)).then(function(response) {
-        // response will be a Promise containing an instance of MediaBlobOperation
-        response.finalize().then(function(mediaBlobs) {
-            // mediaBlobs[0] will be a concatenated MediaBlob of blob1 (which will be trimmed) and blob2 
-        });
-    });
+mbo.trim(4000, 360000);
+mbo.concat(new MediaBlob(blob2));
+mbo.finalize().then(function(mediaBlobs) {
+    // mediaBlobs[0] will be a concatenated MediaBlob of blob1 (which will be trimmed) and blob2 
 });
 ```
 
