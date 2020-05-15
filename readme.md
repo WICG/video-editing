@@ -83,13 +83,10 @@ the remaining content on either end, if any, is removed.
 #### Trim Algorithm
 1. Let *x* be the byte-order position, with the zeroth position representing the first byte
 2. Let *O* represent the blob to be trimmed
-3. If *startTime* is less than 0 **OR** *endTime* is greater than the *O*.duration **OR** *startTime* is greater than the *endTime*:
-    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-    * report the exception event 
-    * break
 
 The User Agent will execute the following when *finalize* is called.
 
+3. *[Check for errors](#error-handling-in-finalize)*
 5. Move *x* to the *startTime* within *O*
 6. Consume all of the bytes between the *startTime* and the *endTime* and place these bytes in a new MediaBlob object *trimmedBlob*
 
@@ -102,7 +99,8 @@ mbo.finalize().then(function(mediaBlobs) {
 ```
 
 ### Split Method
-The split method allows the author to split a *blob* into two separate MediaBlobs at a given time.
+The split method allows the author to split a *blob* into two separate MediaBlobs at a given time. Due to the nature of this operation, it should be the last
+operation before calling finalize().
 
 #### Parameter Definitions
 * `time`: The time, in milliseconds, at which the blob is to be split into two separate MediaBlobs.
@@ -110,16 +108,13 @@ The split method allows the author to split a *blob* into two separate MediaBlob
 ##### Split Algorithm
 1. Let *time* represent the *split location*
 2. Let *O* represent the blob to be split
-3. If *time* is less than 0 **OR** is greater than *O*.duration:
-    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-    * report the exception event 
-    * break
 
 The User Agent will execute the following when *finalize* is called.
 
-5. Consume all of the content prior to the *split location* and place into *mediaBlob1*
-6. Place the remaining content into *mediaBlob2*
-7. Place both *mediaBlob1* and *mediaBlob2* into a sequence
+3. *[Check for errors](#error-handling-in-finalize)*
+4. Consume all of the content prior to the *split location* and place into *mediaBlob1*
+5. Place the remaining content into *mediaBlob2*
+6. Place both *mediaBlob1* and *mediaBlob2* into a sequence
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
@@ -138,13 +133,11 @@ This method allows you to take two *MediaBlob* blobs and concatenate them.
 #### Concat Algorithm
 1. Let *m1* represent the first *MediaBlob* which will be the *MediaBlob* from the *MediaBlobOperation* that has the *concat* method called upon
 2. Let *m2* represent the second *MediaBlob* which will be the *MediaBlob* that will be concatenated with *m1*
-3. If the mimeType of m1 does not equal the mimeType of m2:
-    * create a new ErrorEvent
-    * report the exception event
 
 The User Agent will execute the following when *finalize* is called.
 
-5. Produce a new *MediaBlob* and copy the bytes from *m1* into this new blob, followed by *m2*
+3. *[Check for errors](#error-handling-in-finalize)*
+4. Produce a new *MediaBlob* and copy the bytes from *m1* into this new blob, followed by *m2*
 
 ```
 let mbo = new MediaBlobOperation(new MediaBlob(blob1));
@@ -163,6 +156,8 @@ This method will execute all the tracked operations and return an array of Media
 #### Finalize Method
 1. Let *O* be the *MediaBlobOperation* context object on which the *finalize* method is being called.
 2. The User Agent will execute all the tracked operations and get a sequence of MediaBlobs.
+    * The operations will be executed in a sequential order in which they are added and it is up to web developers to batch the operations in the most optimized way. 
+    * This is necessary to provide better *[error handling](#error-handling-in-finalize)*.
 3. If mimeType is provided, run the steps in *[Handling MimeTypes](#handling-mimetypes)*
     * If the return value is *true*, continue
     * else create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
@@ -186,6 +181,47 @@ mbo.concat(new MediaBlob(blob2));
 mbo.finalize().then(function(mediaBlobs) {
     // mediaBlobs[0] will be a concatenated MediaBlob of blob1 (which will be trimmed) and blob2 
 });
+```
+
+### Error Handling in finalize
+When *[finalize()](#finalize-method)* is called, the User Agent will perform these basic checks for the operations that are batched. This error checking should be done before executing any of the operations.
+
+For *[trim()](#trim-method)*
+1. Let *O* represent the blob to be trimmed
+2. If *startTime* is less than 0 **OR** *endTime* is greater than the *O*.duration **OR** *startTime* is greater than the *endTime*:
+    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
+    * report the exception event 
+    * break
+
+For *[split()](#split-method)*
+1. Let *O* represent the blob to be split
+2. If *time* is less than 0 **OR** is greater than *O*.duration **OR** this is not the last operation before finalize() was called
+    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
+    * report the exception event 
+    * break
+
+For *[concat()](#concat-method)*
+1. Let *m1* represent the first *MediaBlob* which will be the *MediaBlob* from the *MediaBlobOperation* that has the *concat* method called upon
+2. Let *m2* represent the *MediaBlob* that is passed in to *concat* method to be concatenated with *m1*
+3. If the mimeType of m1 does not equal the mimeType of m2:
+    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
+    * report the exception event
+    * break
+
+The ErrorEvent.message will contain:
+1. Operation name
+2. The sequence number indicating the position of the operation
+3. Actual error message
+
+Example:
+```
+let mbo = new MediaBlobOperation(new MediaBlob(blob));
+mbo.trim(0,5000);  // Trim from 0 to 5 secs
+mbo.split(7000);  // Split the MediaBlob at 7 secs
+mbo.finalize().then(function(mediaBlobs) {
+    // Error message: "Split called on sequence 2: The time provided is greater than the duration of the MediaBlob."
+});
+
 ```
 
 ### Handling MimeTypes
