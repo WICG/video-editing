@@ -55,8 +55,8 @@ console.log(mediaBlob.duration) // Outputs 480000 = 8 minutes
 interface MediaBlobOperation {
     constructor(MediaBlob mediaBlob);
 
-    void trim(long startTime, long endTime);
-    void split(long time);
+    void trim(long long startTime, long long endTime);
+    void split(long long time);
     void concat(<Sequence<MediaBlob>);
     Promise<Sequence<MediaBlob>> finalize(optional DOMString mimeType);
 };
