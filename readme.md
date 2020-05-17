@@ -66,7 +66,7 @@ interface MediaBlobOperation {
 When the `MediaBlobOperation` constructor is invoked, the User Agent MUST run the following steps:
 1. Let *mediaBlob* be the constructors first argument
 2. If *mediaBlob* is not undefined, return the new *MediaBlobOperation*
-3. else throw a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
+3. else throw a "[DataError](https://heycam.github.io/webidl/#dataerror)" [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 ### Batching
 The `MediaBlobOperation` methods *Trim*, *Concat* and *Split* will not modify the MediaBlob when invoked. These methods will be tracked and executed only when *Finalize* is called. The benefit of batching these operations is to save memory and provide efficiency. Due to the nature of *Split* operation, it should always be the last method if called before calling *Finalize*.
@@ -188,18 +188,18 @@ When *[finalize()](#finalize-method)* is called, the User Agent will perform the
 For *[trim()](#trim-method)*
 1. Let *O* represent the blob to be trimmed
 2. If *startTime* is less than 0 **OR** *endTime* is greater than the *O*.duration **OR** *startTime* is greater than the *endTime*:
-    * Reject promise with a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
+    * Reject promise with a "[InvalidStateError](https://heycam.github.io/webidl/#invalidstateerror)" [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 For *[split()](#split-method)*
 1. Let *O* represent the blob to be split
 2. If *time* is less than 0 **OR** is greater than *O*.duration **OR** this is not the last operation before finalize() was called
-    * Reject promise with a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
+    * Reject promise with a "[InvalidStateError](https://heycam.github.io/webidl/#invalidstateerror)" [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 For *[concat()](#concat-method)*
 1. Let *m1* represent the first *MediaBlob* which will be the *MediaBlob* from the *MediaBlobOperation* that has the *concat* method called upon
 2. Let *m2* represent the *MediaBlob* that is passed in to *concat* method to be concatenated with *m1*
 3. If the mimeType of m1 does not equal the mimeType of m2:
-    * Reject promise with a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
+    * Reject promise with a "[InvalidStateError](https://heycam.github.io/webidl/#invalidstateerror)" [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 The DOMException.message must contain:
 1. Operation name
@@ -225,7 +225,7 @@ To determine if the mime-type is supported, do the following:
 1. Determine the mime type of the blob by using [MIME sniffing](https://mimesniff.spec.whatwg.org/#sniffing-in-an-audio-or-video-context)
 2. If the mime type is not a valid mime type
 3. OR the mime type contains a media type or media subtype that the UserAgent can not render:
-   * return a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
+   * return a "[NotSupportedError](https://heycam.github.io/webidl/#notsupportederror)" [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 4. else 
    * return *true*
 
