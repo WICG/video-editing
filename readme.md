@@ -218,9 +218,11 @@ Example:
 let mbo = new MediaBlobOperation(new MediaBlob(blob));
 mbo.trim(0,5000);  // Trim from 0 to 5 secs
 mbo.split(7000);  // Split the MediaBlob at 7 secs
-mbo.finalize().then(function(mediaBlobs) {
-    // Error message: "Split called on sequence 2: The time provided is greater than the duration of the MediaBlob."
+mbo.finalize().then(function(mediaBlobs) { })
+.catch((error) => {
+    // sample error.message: "Split called on sequence 2: The time provided is greater than the duration of the MediaBlob."
 });
+
 
 ```
 
