@@ -37,9 +37,9 @@ interface MediaBlob : Blob {
 ### Constructor MediaBlob
 When the `MediaBlob` constructor is invoked, the User Agent MUST run the following steps:
 1. Let *blob* be the constructors first argument
-2. If *[Handling MimeTypes](#handling-mimetypes)* does not result in an exception, return the new *MediaBlob*
-3. else create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-4. report the exception event
+2. Run the steps in *[Handling MimeTypes](#handling-mimetypes)*
+    * If the return value is *true*, return the new *MediaBlob*
+    * else throw the [DOMException](https://heycam.github.io/webidl/#idl-DOMException) that was returned.
 
 ### Duration Property
 1. When the *duration* property is called the User Agent MUST return the length of the *Blob* in milliseconds
@@ -66,8 +66,7 @@ interface MediaBlobOperation {
 When the `MediaBlobOperation` constructor is invoked, the User Agent MUST run the following steps:
 1. Let *mediaBlob* be the constructors first argument
 2. If *mediaBlob* is not undefined, return the new *MediaBlobOperation*
-3. else create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-4. report the exception event
+3. else throw a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 ### Batching
 The `MediaBlobOperation` methods *Trim*, *Concat* and *Split* will not modify the MediaBlob when invoked. These methods will be tracked and executed only when *Finalize* is called. The benefit of batching these operations is to save memory and provide efficiency. Due to the nature of *Split* operation, it should always be the last method if called before calling *Finalize*.
@@ -155,15 +154,15 @@ This method will execute all the tracked operations and return an array of Media
 
 #### Finalize Method
 1. Let *O* be the *MediaBlobOperation* context object on which the *finalize* method is being called.
-2. The User Agent will execute all the tracked operations and get a sequence of MediaBlobs.
-    * The operations will be executed in a sequential order in which they are added and it is up to web developers to batch the operations in the most optimized way. 
-    * This is necessary to provide better *[error handling](#error-handling-in-finalize)*.
+2. The User Agent will perform *[error checking](#error-handling-in-finalize)*.
 3. If mimeType is provided, run the steps in *[Handling MimeTypes](#handling-mimetypes)*
     * If the return value is *true*, continue
-    * else create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-    * report the exception event
-4. The User Agent will create a new sequence of *MediaBlob* based on the mime type provided.
-5. Return the sequence of *MediaBlob*
+    * else reject the  promise with the [DOMException](https://heycam.github.io/webidl/#idl-DOMException) that was returned.
+4. If no errors, the User Agent will execute all the tracked operations and get a sequence of MediaBlobs.
+    * The operations will be executed in a sequential order in which they are added and it is up to web developers to batch the operations in the most optimized way. 
+    * This is necessary to provide better *[error handling](#error-handling-in-finalize)*.
+5. The User Agent will create a new sequence of *MediaBlob* based on the mime type provided.
+6. Resolve the promise with the sequence of *MediaBlob*
 
 ```
 // let the mimeType of the blob be 'video/webm; codecs=vp8,opus;'
@@ -189,29 +188,22 @@ When *[finalize()](#finalize-method)* is called, the User Agent will perform the
 For *[trim()](#trim-method)*
 1. Let *O* represent the blob to be trimmed
 2. If *startTime* is less than 0 **OR** *endTime* is greater than the *O*.duration **OR** *startTime* is greater than the *endTime*:
-    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-    * report the exception event 
-    * break
+    * Reject promise with a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 For *[split()](#split-method)*
 1. Let *O* represent the blob to be split
 2. If *time* is less than 0 **OR** is greater than *O*.duration **OR** this is not the last operation before finalize() was called
-    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-    * report the exception event 
-    * break
+    * Reject promise with a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
 For *[concat()](#concat-method)*
 1. Let *m1* represent the first *MediaBlob* which will be the *MediaBlob* from the *MediaBlobOperation* that has the *concat* method called upon
 2. Let *m2* represent the *MediaBlob* that is passed in to *concat* method to be concatenated with *m1*
 3. If the mimeType of m1 does not equal the mimeType of m2:
-    * create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-    * report the exception event
-    * break
+    * Reject promise with a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 
-The ErrorEvent.message will contain:
+The DOMException.message must contain:
 1. Operation name
 2. The sequence number indicating the position of the operation
-3. Actual error message
 
 Example:
 ```
@@ -233,8 +225,7 @@ To determine if the mime-type is supported, do the following:
 1. Determine the mime type of the blob by using [MIME sniffing](https://mimesniff.spec.whatwg.org/#sniffing-in-an-audio-or-video-context)
 2. If the mime type is not a valid mime type
 3. OR the mime type contains a media type or media subtype that the UserAgent can not render:
-   * Create a new [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#errorevent)
-   * Report the exception event and return 
+   * return a new [DOMException](https://heycam.github.io/webidl/#idl-DOMException)
 4. else 
    * return *true*
 
